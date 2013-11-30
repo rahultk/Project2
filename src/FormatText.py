@@ -9,6 +9,7 @@ import csv
 import nltk
 import itertools
 import sys
+import string 
 from nltk.corpus import stopwords
 from nltk.util import tokenwrap
 from nltk.corpus import wordnet
@@ -44,9 +45,9 @@ def processTweet(tweet):
     #Convert to LowerCase
     tweet = tweet.lower()
     #Convert www.* or https?://* to URL
-    tweet = re.sub('((www\.[\s]+)|(htt[^\s]+))','URL',tweet)
+    tweet = re.sub('((www\.[\s]+)|(htt[^\s]+))','url',tweet)
     #Convert @username to AT_USER
-    tweet = re.sub('@[^\s]+','AT_USER',tweet)
+    tweet = re.sub('@[^\s]+','at_user',tweet)
     #Remove additional white spaces i.e replace 2 white spaces with one
     tweet = re.sub('[\s]+', ' ', tweet)
     #Replace #word with word
@@ -96,16 +97,17 @@ def getFeatureVector(tweet, stopWordsList):
     for w in words:
         #replace two or more with two occurrences
         w = replaceTwoOrMore(w)
-        #strip punctuation
+        #strip punctuations from word
         w = w.strip('\'"?,.')
         #check if the word stats with an alphabet
         val = re.search(r"^[a-zA-Z][a-zA-Z0-9]*$", w)
         #ignore if it is a stop word
-        if(w in stopWordsList or val is None):
+        if(w in stopWordsList or val is None or len(w) <= 2):
             continue
         else:
             w = lemma_process(w)
-            sys.stdout.write("After: ",w,"\n")    
+#             print "After: ",w,"\n"
+#             sys.stdout.write(printThis)    
             featureVector.append(w.lower())
     return featureVector
 #end    
@@ -129,6 +131,22 @@ def lemma_process(w):
     else:
         w = lemmatzr.lemmatize(w,wordnet.NOUN)
     return w
+#end
+
+
+#method to extract list of bigrams from a given list of words
+def getBigramList(wordList, score_fn=BigramAssocMeasures.chi_sq, n=200):
+    bigramList = []
+    finder = BigramCollocationFinder.from_words(wordList)
+    finder.apply_freq_filter(1)
+    finder.apply_word_filter(lambda w: len(w) < 2 ) 
+    bigrams = finder.nbest(score_fn, n)
+    #Iterating through the bigram list to remove comma and combineString 
+    for everySet in bigrams:
+        str = everySet[0]+" "+everySet[1]
+        bigramList.append(str)
+    #end of the for loop    
+    return bigramList
 #end
 
 

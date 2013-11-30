@@ -1,8 +1,8 @@
 '''
 Created on Nov 9, 2013
-
 @author: Rahul
 '''
+
 #*************All Imports*************
 #import regex
 import nltk 
@@ -27,16 +27,18 @@ from sklearn.metrics import accuracy_score
 from nltk.featstruct import FeatList
 #*************************************
 
-#initialize stopWords and start loop for building tweets
+#initialize stopWords and adding the necessary extra stop-words
+stopWords = []
 stopWords = stopwords.words('english')
-    
+stopWords.extend(["url","at_user"])
+
     
 def main():
     start_time = time.time()
     print "Inside main"
     
     #creating file object for reading the text from csv file
-    data = csv.reader(open('TrainData/SmokingDataJ1.csv', 'r' ))
+    data = csv.reader(open('TrainData/SmDataWORetweets.csv', 'r' ))
     
     #enter the number of folds for Cross Validation
     num_folds = 5
@@ -164,26 +166,19 @@ def classifyScikit_SVM(rawTrainData, rawTestData):
     
     
     #Build tweets array 
-    tweets = [] 
+    tweets = []
+    print "\n\n** Print tweets **" 
     for line in rawTrainData:
         sentiment = line[1]
         tweetText = line[0]
         processedTweet = processTweet(tweetText)
         featureVector = getFeatureVector(processedTweet, stopWords)
-        tweets.append((featureVector, sentiment));  
+        tweets.append((featureVector, sentiment))          
+        print ((featureVector, sentiment)),
     #end loop
     
-
-    #Printing Tweets
-    print "\n\nPrint tweets : "
-    for x in tweets:
-        print x
-    #end printing tweets
     
-    
-    
-    
-    #generating bigrams from tweets
+    #generating bigrams from TRAINING SET
     for tweet in tweets:
         bigrams = []
         #populating bigram list with bigrams
@@ -193,8 +188,8 @@ def classifyScikit_SVM(rawTrainData, rawTestData):
             tweet[0].append(bigram)
     #end 
     
-    
-    #loop for building FeatureList
+            
+    #loop for building FeatureList ONLY FOR TRAINING DATA
     featureList = []    
     for tweet in tweets:    
         for word in tweet[0]:
@@ -220,7 +215,16 @@ def classifyScikit_SVM(rawTrainData, rawTestData):
         testTweets.append((featureVector, sentiment));  
     #end loop
     
-    
+    #generating bigrams from the TEST SET
+    for tweet in testTweets:
+        bigrams = []
+        #populating bigram list with bigrams
+        bigrams = getBigramList(tweet[0])
+        #adding the bigrams back to tweets List
+        for bigram in bigrams:
+            tweet[0].append(bigram)
+    #end 
+        
     #Getting sparse Matrix and getting Sentiment  for the Test Data in a seperate list in binary form    
     sparseMatrixTest = getSparseMatrix(testTweets, featureList)
     testSentiment = getSentimentList(testTweets)
