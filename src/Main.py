@@ -5,6 +5,7 @@ Created on Nov 9, 2013
 
 #*************All Imports*************
 #import regex
+# Added simple comment to check GitHub access
 import nltk 
 from nltk.collocations import BigramCollocationFinder
 from nltk.metrics import BigramAssocMeasures
